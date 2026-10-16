@@ -16,9 +16,24 @@ jobs:
           cache: gradle
       - uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '8.5'
-      - run: gradle assembleDebug --no-daemon --stacktrace
-      - uses: actions/upload-artifact@v4
+          gradle-version: '8.10.2'
+      - name: Build
+        env:
+          GRADLE_OPTS: "-Xmx3g"
+        run: |
+          set -o pipefail
+          gradle assembleDebug --no-daemon --stacktrace 2>&1 | tee build.log
+      - name: Report error
+        if: failure()
+        run: |
+          MSG=$(grep -A 10 "What went wrong" build.log | head -14)
+          if [ -z "$MSG" ]; then MSG=$(grep -E "^e: |error: |OutOfMemory|Unsupported" build.log | tail -10); fi
+          if [ -z "$MSG" ]; then MSG=$(tail -12 build.log); fi
+          MSG=$(echo "$MSG" | sed -e 's/%/%25/g' -e 's/$/%0A/' | tr -d '\n')
+          echo "::error title=BuildFailed::$MSG"
+      - name: Upload APK
+        if: success()
+        uses: actions/upload-artifact@v4
         with:
           name: CoffeeFitness-debug-apk
           path: app/build/outputs/apk/debug/*.apk
