@@ -26,8 +26,8 @@ jobs:
       - name: Report error
         if: failure()
         run: |
-          MSG=$(grep -A 10 "What went wrong" build.log | head -14)
-          if [ -z "$MSG" ]; then MSG=$(grep -E "^e: |error: |OutOfMemory|Unsupported" build.log | tail -10); fi
+          MSG=$(grep -E "^e: " build.log | head -30)
+          if [ -z "$MSG" ]; then MSG=$(grep -A 10 "What went wrong" build.log | head -14); fi
           if [ -z "$MSG" ]; then MSG=$(tail -12 build.log); fi
           MSG=$(echo "$MSG" | sed -e 's/%/%25/g' -e 's/$/%0A/' | tr -d '\n')
           echo "::error title=BuildFailed::$MSG"
