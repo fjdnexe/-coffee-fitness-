@@ -31,9 +31,16 @@ jobs:
           if [ -z "$MSG" ]; then MSG=$(tail -12 build.log); fi
           MSG=$(echo "$MSG" | sed -e 's/%/%25/g' -e 's/$/%0A/' | tr -d '\n')
           echo "::error title=BuildFailed::$MSG"
+      - name: Rename APK to Cfmark
+        if: success()
+        run: |
+          SRC=$(ls app/build/outputs/apk/debug/*.apk | head -1)
+          mkdir -p out
+          cp "$SRC" out/Cfmark.apk
+          ls -lh out/
       - name: Upload APK
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: CoffeeFitness-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          name: Cfmark
+          path: out/Cfmark.apk
